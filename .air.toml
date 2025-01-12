@@ -1,0 +1,12 @@
+# .air.toml
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go run cmd/api/main.go"
+  include = ["."]
+  exclude = ["tmp", "vendor"]
+  delay = 2000
+
+[log]
+  time = true
