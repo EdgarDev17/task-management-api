@@ -85,6 +85,18 @@ func (h *taskEventHandler) ProcessEvents(ctx context.Context) error {
 			}
 			err = h.queryRepository.Delete(ctx, readModel)
 
+		case *events.TaskStateUpdatedEvent:
+			readModel :=
+				&models.Task{
+					ID:          e.TaskID,
+					BoardID:     e.BoardID,
+					Title:       e.Title,
+					Description: e.Description,
+					State:       e.NewState,
+				}
+
+			err = h.queryRepository.Upsert(ctx, readModel)
+
 		default:
 			err = fmt.Errorf("unknown event type: %T", event)
 		}

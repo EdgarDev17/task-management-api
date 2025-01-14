@@ -108,5 +108,8 @@ func main() {
 	router.PUT("/api/v1/tasks", taskCommandHandler.Update)
 	router.DELETE("/api/v1/tasks/:id", taskCommandHandler.Delete)
 
+	// Rutas para modificar el estado de la task
+	router.PATCH("/api/v1/tasks/state", taskCommandHandler.UpdateState)
+
 	router.Run()
 }

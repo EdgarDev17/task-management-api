@@ -13,6 +13,7 @@ type TaskCommandHandlerI interface {
 	Create(c *gin.Context)
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
+	UpdateState(c *gin.Context)
 }
 
 type taskCommandHandlerImpl struct {
@@ -81,5 +82,27 @@ func (h *taskCommandHandlerImpl) Delete(c *gin.Context) {
 	// Responde con un mensaje
 	c.JSON(200, gin.H{
 		"message": "eliminado con exito",
+	})
+}
+
+func (h *taskCommandHandlerImpl) UpdateState(c *gin.Context) {
+	var task models.Task
+
+	// Primero mapeo el JSON con el modelo
+	if err := c.ShouldBindJSON(&task); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.service.UpdateState(c, task.ID, task.BoardID, task.State)
+
+	if err != nil {
+		fmt.Println("error", err)
+		return
+	}
+
+	// Responde con un mensaje
+	c.JSON(200, gin.H{
+		"message": "task actualizado con exito",
 	})
 }

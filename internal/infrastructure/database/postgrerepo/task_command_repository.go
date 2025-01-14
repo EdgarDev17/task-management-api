@@ -190,3 +190,59 @@ func (r *taskCommandRepository) Delete(ctx context.Context, id string) error {
 
 	return tx.Commit()
 }
+
+func (r *taskCommandRepository) UpdateState(ctx context.Context, taskID uuid.UUID, boardID uuid.UUID, newState string) error {
+	query := `
+        UPDATE tareas 
+        SET estado = $1
+        WHERE id = $2 AND id_tablero = $3`
+
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("error creating transaction: %v", err)
+	}
+
+	result, err := tx.ExecContext(
+		ctx,
+		query,
+		newState,
+		taskID,
+		boardID,
+	)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error getting rows affected: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		tx.Rollback()
+		return fmt.Errorf("task with id %s not found", taskID)
+	}
+
+	event := &events.TaskStateUpdatedEvent{
+		BaseEvent: events.BaseEvent{
+			ID:        uuid.New(),
+			Timestamp: time.Now(),
+			Type:      "TaskStateUpdated",
+		},
+		TaskID:   taskID,
+		BoardID:  boardID,
+		NewState: newState,
+	}
+
+	err = r.eventStore.SaveEvent(ctx, event)
+	if err != nil {
+		tx.Rollback()
+		r.logger.Error("Error al guardar evento", zap.Error(err))
+		return err
+	}
+
+	return tx.Commit()
+}
