@@ -8,22 +8,24 @@ import (
 	"task-management-api/internal/domain/repositories"
 	"task-management-api/internal/infrastructure/events"
 	"time"
+
+	"go.uber.org/zap"
 )
 
-type EventHandler struct {
+type taskEventHandler struct {
 	eventStore      repositories.EventStore
 	logger          repositories.Logger
-	queryRepository repositories.BoardQueryRepositoryI
+	queryRepository repositories.TaskQueryRepositoryI
 	ticker          *time.Ticker
 	done            chan bool
 }
 
-func NewEventHandler(
+func NewTaskEventHandler(
 	eventStore repositories.EventStore,
-	queryRepository repositories.BoardQueryRepositoryI,
+	queryRepository repositories.TaskQueryRepositoryI,
 	logger repositories.Logger,
-) *EventHandler {
-	return &EventHandler{
+) *taskEventHandler {
+	return &taskEventHandler{
 		eventStore:      eventStore,
 		queryRepository: queryRepository,
 		ticker:          time.NewTicker(5 * time.Second),
@@ -32,18 +34,18 @@ func NewEventHandler(
 	}
 }
 
-func (h *EventHandler) ProcessEvents(ctx context.Context) error {
+func (h *taskEventHandler) ProcessEvents(ctx context.Context) error {
 	state, err := h.eventStore.GetLastProcessingState(ctx)
 
 	if err != nil {
-		log.Printf("Error getting last processing state: %v", err)
+		h.logger.Error("Error al obtener el eltimo evento procesado", zap.Error(err))
 		return err
 	}
 
 	eventsList, err := h.eventStore.GetEvents(ctx, state)
 
 	if err != nil {
-		log.Printf("Error getting events: %v", err)
+		h.logger.Error("Error al obtener eventos en Tasks", zap.Error(err))
 		return err
 	}
 
@@ -56,29 +58,16 @@ func (h *EventHandler) ProcessEvents(ctx context.Context) error {
 
 		// Procesamiento solo para creación de Board
 		switch e := event.(type) {
-		case *events.BoardCreatedEvent:
-			readModel := &models.Board{
-				ID:          e.BoardID,
-				Name:        e.Name,
-				Description: e.Description,
-				CreatedAt:   e.GetTimestamp(),
+		case *events.TaskCreatedEvent:
+			readModel := &models.Task{
+				ID:        e.ID,
+				Title:     e.Title,
+				BoardID:   e.BoardID,
+				State:     e.State,
+				CreatedAt: e.GetTimestamp(),
 			}
 
 			err = h.queryRepository.Upsert(ctx, readModel)
-
-		case *events.BoardUpdatedEvent:
-			readModel := &models.Board{
-				ID:          e.BoardID,
-				Name:        e.Name,
-				Description: e.Description,
-			}
-			err = h.queryRepository.Upsert(ctx, readModel)
-
-		case *events.BoardDeletedEvent:
-			readModel := &models.Board{
-				ID: e.BoardID,
-			}
-			err = h.queryRepository.Delete(ctx, readModel)
 
 		default:
 			err = fmt.Errorf("unknown event type: %T", event)

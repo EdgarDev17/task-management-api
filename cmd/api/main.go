@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"task-management-api/internal/domain/repositories"
 	"task-management-api/internal/infrastructure/database/mongorepo"
 	"task-management-api/internal/infrastructure/database/postgrerepo"
+	"task-management-api/internal/infrastructure/events"
 	"task-management-api/internal/interfaces/handlers"
 	"task-management-api/internal/usecases/services"
 	"task-management-api/pkg/logger"
@@ -55,6 +57,7 @@ func main() {
 
 	// Initialize repositories
 	boardQueryRepo := mongorepo.NewMongoBoardQueryRepository(mongodb, zapLogger)
+	taskQueryRepo := mongorepo.NewMongoTaskQueryRepository(mongodb, zapLogger)
 
 	// Stores
 	eventStore, err := postgrerepo.NewPostgresEventStore(postgresdb)
@@ -65,7 +68,14 @@ func main() {
 
 	// Inicializo el manejador de eventos (de stores)
 	eventHandler := handlers.NewEventHandler(eventStore, boardQueryRepo, zapLogger)
-	eventHandler.Start()
+	taskEventHandler := handlers.NewTaskEventHandler(eventStore, taskQueryRepo, zapLogger)
+
+	handlersList := []repositories.EventHandlerI{
+		eventHandler, taskEventHandler,
+	}
+
+	processor := events.NewEventProcessor(handlersList, zapLogger)
+	processor.Start()
 
 	// Initialize services and handlers
 	boardQueryService := services.NewBoardQueryService(boardQueryRepo)
@@ -75,13 +85,26 @@ func main() {
 	boardCommandService := services.NewBoardCommandService(boardCommandRepo, zapLogger)
 	boardCommandHandler := handlers.NewBoardCommandHandler(boardCommandService)
 
+	taskCommandRepository := postgrerepo.NewTaskCommandRepository(postgresdb, eventStore, zapLogger)
+	taskCommandService := services.NewTaskCommandService(taskCommandRepository, zapLogger)
+	taskCommandHandler := handlers.NewTaskCommandHandler(taskCommandService)
+
 	// Set up router
 	router := gin.Default()
+
+	// Rutas para boards
 	router.GET("/api/v1/boards", boardQueryHandler.GetAll)
 	router.GET("/api/v1/boards/:id", boardQueryHandler.GetById)
 	router.POST("/api/v1/boards", boardCommandHandler.Create)
 	router.PUT("/api/v1/boards", boardCommandHandler.Update)
 	router.DELETE("/api/v1/boards/:id", boardCommandHandler.Delete)
+
+	// Rutas para task
+	// router.GET("/api/v1/tasks", taskCommandHandler.GetAll)
+	// router.GET("/api/v1/tasks/:id", taskCommandHandler.GetById)
+	router.POST("/api/v1/tasks", taskCommandHandler.Create)
+	router.PUT("/api/v1/tasks", taskCommandHandler.Update)
+	router.DELETE("/api/v1/tasks/:id", taskCommandHandler.Delete)
 
 	router.Run()
 }

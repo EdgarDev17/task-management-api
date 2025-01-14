@@ -138,7 +138,23 @@ func (s *PostgresEventStore) GetEvents(ctx context.Context, state models.Process
 			e.Type = eventType
 			event = &e
 
-		// Agregar más casos según los tipos de eventos que manejes
+		case "TaskCreated":
+			var e events.TaskCreatedEvent
+			if err := json.Unmarshal(data, &e); err != nil {
+				return nil, fmt.Errorf("error unmarshaling ProductCreatedEvent: %w", err)
+			}
+
+			// Convertir string a UUID
+			idUUID, err := uuid.Parse(id)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing UUID: %w", err)
+			}
+			e.ID = idUUID
+			e.Timestamp = timestamp
+			e.Type = eventType
+			event = &e
+
+		// Agregar más casos según los tipos de eventos que manejo
 
 		default:
 			return nil, fmt.Errorf("unknown event type: %s", eventType)
