@@ -34,12 +34,12 @@ func (r *taskCommandRepository) Create(ctx context.Context, task *models.Task) e
 	RETURNING id`
 
 	tx, err := r.db.BeginTx(ctx, nil)
+
 	if err != nil {
 		return fmt.Errorf("error creating transaction: %v", err)
 	}
 
-	taskID := uuid.New()
-	task.ID = taskID
+	var taskID uuid.UUID
 	createdAt := time.Now()
 
 	err = tx.QueryRowContext(
@@ -81,11 +81,11 @@ func (r *taskCommandRepository) Create(ctx context.Context, task *models.Task) e
 
 func (r *taskCommandRepository) Update(ctx context.Context, task *models.Task) error {
 	query := `
-        UPDATE tasks 
-        SET title = $1,
-            description = $2,
-            state = $3
-        WHERE id = $4 AND board_id = $5`
+        UPDATE tareas 
+        SET titulo = $1,
+            descripcion = $2,
+            estado = $3
+        WHERE id = $4 AND id_tablero = $5`
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -124,10 +124,11 @@ func (r *taskCommandRepository) Update(ctx context.Context, task *models.Task) e
 			Timestamp: time.Now(),
 			Type:      "TaskUpdated",
 		},
-		TaskID:  task.ID,
-		BoardID: task.BoardID,
-		Title:   task.Title,
-		State:   task.State,
+		TaskID:      task.ID,
+		BoardID:     task.BoardID,
+		Title:       task.Title,
+		State:       task.State,
+		Description: task.Description,
 	}
 
 	err = r.eventStore.SaveEvent(ctx, event)
@@ -141,7 +142,7 @@ func (r *taskCommandRepository) Update(ctx context.Context, task *models.Task) e
 }
 
 func (r *taskCommandRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM tasks WHERE id = $1`
+	query := `DELETE FROM tareas WHERE id = $1`
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {

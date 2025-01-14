@@ -89,6 +89,8 @@ func main() {
 	taskCommandService := services.NewTaskCommandService(taskCommandRepository, zapLogger)
 	taskCommandHandler := handlers.NewTaskCommandHandler(taskCommandService)
 
+	taskQueryService := services.NewTaskQueryServiceImpl(taskQueryRepo, zapLogger)
+	taskQueryHandler := handlers.NewTaskQueryHandler(taskQueryService)
 	// Set up router
 	router := gin.Default()
 
@@ -100,8 +102,8 @@ func main() {
 	router.DELETE("/api/v1/boards/:id", boardCommandHandler.Delete)
 
 	// Rutas para task
-	// router.GET("/api/v1/tasks", taskCommandHandler.GetAll)
-	// router.GET("/api/v1/tasks/:id", taskCommandHandler.GetById)
+	router.GET("/api/v1/tasks", taskQueryHandler.GetAll)
+	router.GET("/api/v1/tasks/:id", taskQueryHandler.GetById)
 	router.POST("/api/v1/tasks", taskCommandHandler.Create)
 	router.PUT("/api/v1/tasks", taskCommandHandler.Update)
 	router.DELETE("/api/v1/tasks/:id", taskCommandHandler.Delete)

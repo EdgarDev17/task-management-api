@@ -9,9 +9,9 @@ import (
 type Task struct {
 	ID          uuid.UUID `json:"id"`
 	BoardID     uuid.UUID `json:"boardid"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	State       string    `json:"state"`
+	Title       string    `json:"titulo"`
+	Description string    `json:"descripcion"`
+	State       string    `json:"estado"`
 	CreatedAt   time.Time `json:"createdat"`
 }
 

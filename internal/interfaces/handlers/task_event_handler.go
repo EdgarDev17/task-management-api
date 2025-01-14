@@ -60,7 +60,7 @@ func (h *taskEventHandler) ProcessEvents(ctx context.Context) error {
 		switch e := event.(type) {
 		case *events.TaskCreatedEvent:
 			readModel := &models.Task{
-				ID:        e.ID,
+				ID:        e.TaskID,
 				Title:     e.Title,
 				BoardID:   e.BoardID,
 				State:     e.State,
@@ -68,6 +68,22 @@ func (h *taskEventHandler) ProcessEvents(ctx context.Context) error {
 			}
 
 			err = h.queryRepository.Upsert(ctx, readModel)
+
+		case *events.TaskUpdatedEvent:
+			readModel := &models.Task{
+				ID:          e.TaskID,
+				Title:       e.Title,
+				BoardID:     e.BoardID,
+				State:       e.State,
+				Description: e.Description,
+			}
+			err = h.queryRepository.Upsert(ctx, readModel)
+
+		case *events.TaskDeletedEvent:
+			readModel := &models.Task{
+				ID: e.TaskID,
+			}
+			err = h.queryRepository.Delete(ctx, readModel)
 
 		default:
 			err = fmt.Errorf("unknown event type: %T", event)

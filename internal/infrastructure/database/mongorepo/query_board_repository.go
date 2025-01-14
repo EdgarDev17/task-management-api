@@ -73,8 +73,7 @@ func (db MongoBoardQueryRepository) Upsert(ctx context.Context, board *models.Bo
 
 	filter := bson.M{"_id": uuidString}
 
-	// En el update incluimos el _id explícitamente
-
+	// En el update incluyo el _id explícitamente
 	update := bson.M{
 		"$set": bson.M{
 			"_id":         uuidString, // Incluimos el ID en el set

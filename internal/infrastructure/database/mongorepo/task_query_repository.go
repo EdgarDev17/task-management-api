@@ -28,6 +28,7 @@ func (db *mongoTaskQueryRepository) GetAll(ctx context.Context) ([]*models.TaskQ
 	var tasks []*models.TaskQuery
 
 	opts := options.Find().SetSort(bson.D{{Key: "fecha_creacion", Value: -1}})
+
 	cursor, err := db.collection.Find(ctx, bson.M{}, opts)
 	if err != nil {
 		db.logger.Error("error al buscar las tareas", zap.Error(err))
