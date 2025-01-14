@@ -12,6 +12,7 @@ import (
 	"task-management-api/internal/infrastructure/database/postgrerepo"
 	"task-management-api/internal/interfaces/handlers"
 	"task-management-api/internal/usecases/services"
+	"task-management-api/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -20,62 +21,67 @@ import (
 )
 
 func main() {
-
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
 	}
 
 	mongdbUri := os.Getenv("MONGODB_URI")
-
-	// postgresql connection
-	// Obtén las variables de entorno
 	user := os.Getenv("POSTGRE_USER")
 	dbname := os.Getenv("POSTGRE_DB")
 	password := os.Getenv("POSTGRE_PASSWORD")
 	sslmode := os.Getenv("DB_SSLMODE")
 
-	// Crea la cadena de conexión
 	postgreUri := fmt.Sprintf("user=%s dbname=%s password=%s sslmode=%s", user, dbname, password, sslmode)
-
 	postgresdb, err := sql.Open("postgres", postgreUri)
-
 	if err != nil {
 		log.Fatalf("Error connecting to PostgreSQL: %v", err)
 	}
 
-	client, err := mongo.Connect(context.TODO(), options.Client().
-		ApplyURI(mongdbUri))
-
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongdbUri))
 	if err != nil {
 		panic(err)
 	}
 
+	// Initialize cleanup handlers
 	defer func() {
 		if err := client.Disconnect(context.TODO()); err != nil {
 			panic(err)
 		}
 	}()
-
 	defer postgresdb.Close()
 
 	mongodb := client.Database("boardmanagement")
+	zapLogger := logger.NewZapLogger()
 
-	// Retorna una instacia del router que vamos a utilizar
-	router := gin.Default()
+	// Initialize repositories
+	boardQueryRepo := mongorepo.NewMongoBoardQueryRepository(mongodb, zapLogger)
 
-	boardQueryRepo := mongorepo.NewMongoBoardQueryRepository(mongodb)
+	// Stores
+	eventStore, err := postgrerepo.NewPostgresEventStore(postgresdb)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Inicializo el manejador de eventos (de stores)
+	eventHandler := handlers.NewEventHandler(eventStore, boardQueryRepo, zapLogger)
+	eventHandler.Start()
+
+	// Initialize services and handlers
 	boardQueryService := services.NewBoardQueryService(boardQueryRepo)
 	boardQueryHandler := handlers.NewBoardHandler(boardQueryService)
 
-	// command db
-	boardCommandRepo := postgrerepo.NewPostgreSQLBoardCommandRepository(postgresdb)
-	boardCommandService := services.NewBoardCommandService(boardCommandRepo)
+	boardCommandRepo := postgrerepo.NewPostgreSQLBoardCommandRepository(postgresdb, eventStore, zapLogger)
+	boardCommandService := services.NewBoardCommandService(boardCommandRepo, zapLogger)
 	boardCommandHandler := handlers.NewBoardCommandHandler(boardCommandService)
 
-	router.GET("/boards", boardQueryHandler.GetAll)
-	router.GET("/boards/:id", boardQueryHandler.GetById)
+	// Set up router
+	router := gin.Default()
+	router.GET("/api/v1/boards", boardQueryHandler.GetAll)
+	router.GET("/api/v1/boards/:id", boardQueryHandler.GetById)
+	router.POST("/api/v1/boards", boardCommandHandler.Create)
+	router.PUT("/api/v1/boards", boardCommandHandler.Update)
+	router.DELETE("/api/v1/boards/:id", boardCommandHandler.Delete)
 
-	router.POST("/boards", boardCommandHandler.Create)
-
-	router.Run() // escuchando en: 0.0.0.0:8080
+	router.Run()
 }

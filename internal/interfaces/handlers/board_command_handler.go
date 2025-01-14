@@ -28,7 +28,7 @@ func NewBoardCommandHandler(service services.BoardCommandServiceI) BoardCommandH
 func (h *boardCommandHandlerImpl) Create(c *gin.Context) {
 	var board models.Board
 
-	// Primero mapeo el JSON con el modelo
+	// Primero mapeo el JSON para que funcione con el modelo
 	if err := c.ShouldBindJSON(&board); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -38,29 +38,40 @@ func (h *boardCommandHandlerImpl) Create(c *gin.Context) {
 
 	if err != nil {
 		fmt.Println("error", err)
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Task received",
+		"message": "Tablero Recibido",
 		"board":   board,
 	})
 }
 
 func (h *boardCommandHandlerImpl) Update(c *gin.Context) {
-	err := h.service.Create(c, &models.Board{})
+	var board models.Board
+
+	// Primero mapeo el JSON con el modelo
+	if err := c.ShouldBindJSON(&board); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.service.Update(c, &board)
 
 	if err != nil {
 		fmt.Println("error", err)
+		return
 	}
 
 	// Responde con un mensaje
 	c.JSON(200, gin.H{
-		"message": "creadoo con exito",
+		"message": "board actualizado con exito",
 	})
 }
 
 func (h *boardCommandHandlerImpl) Delete(c *gin.Context) {
-	err := h.service.Create(c, &models.Board{})
+	id := c.Param("id")
+	err := h.service.Delete(c, id)
 
 	if err != nil {
 		fmt.Println("error", err)

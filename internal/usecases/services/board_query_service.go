@@ -9,8 +9,8 @@ import (
 
 // Interface para el servicio
 type BoardQueryServiceI interface {
-	GetAll(ctx context.Context) ([]*models.Board, error)
-	GetById(ctx context.Context, id string) (*models.Board, error)
+	GetAll(ctx context.Context) ([]*models.BoardQuery, error)
+	GetById(ctx context.Context, id string) (*models.BoardQuery, error)
 }
 
 // Implementacion concreta del servicio
@@ -26,7 +26,7 @@ func NewBoardQueryService(repo repositories.BoardQueryRepositoryI) BoardQuerySer
 }
 
 // Metodo encargado del retornar el Board desde la base de datos a traves del ID
-func (service *BoardQueryServiceImpl) GetById(ctx context.Context, id string) (*models.Board, error) {
+func (service *BoardQueryServiceImpl) GetById(ctx context.Context, id string) (*models.BoardQuery, error) {
 	data, err := service.repo.GetById(ctx, id)
 
 	if err != nil {
@@ -35,7 +35,7 @@ func (service *BoardQueryServiceImpl) GetById(ctx context.Context, id string) (*
 	return data, nil
 }
 
-func (service *BoardQueryServiceImpl) GetAll(ctx context.Context) ([]*models.Board, error) {
+func (service *BoardQueryServiceImpl) GetAll(ctx context.Context) ([]*models.BoardQuery, error) {
 	data, err := service.repo.GetAll(ctx)
 
 	if err != nil {

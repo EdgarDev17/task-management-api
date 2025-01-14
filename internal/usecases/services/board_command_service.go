@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"task-management-api/internal/domain/models"
 	"task-management-api/internal/domain/repositories"
+
+	"go.uber.org/zap"
 )
 
 // interfaz para el servicio
@@ -15,12 +17,14 @@ type BoardCommandServiceI interface {
 }
 
 type boardCommandServiceImpl struct {
-	repo repositories.BoardCommandRepositoryI
+	repo   repositories.BoardCommandRepositoryI
+	logger repositories.Logger
 }
 
-func NewBoardCommandService(repo repositories.BoardCommandRepositoryI) BoardCommandServiceI {
+func NewBoardCommandService(repo repositories.BoardCommandRepositoryI, logger repositories.Logger) BoardCommandServiceI {
 	return &boardCommandServiceImpl{
-		repo: repo,
+		repo:   repo,
+		logger: logger,
 	}
 }
 
@@ -28,7 +32,7 @@ func (s *boardCommandServiceImpl) Create(ctx context.Context, board *models.Boar
 	err := s.repo.Create(ctx, board)
 
 	if err != nil {
-		fmt.Println("error en el servicio postgresql ", err)
+		s.logger.Error("Error en el service command Create()", zap.Error(err))
 		return err
 	}
 
@@ -39,7 +43,7 @@ func (s *boardCommandServiceImpl) Update(ctx context.Context, board *models.Boar
 	err := s.repo.Update(ctx, board)
 
 	if err != nil {
-		fmt.Println("error en el servicio postgresql ", err)
+		s.logger.Error("Error en el service command Update()", zap.Error(err))
 		return err
 	}
 

@@ -32,8 +32,8 @@ func (h *boardQueryHandlerImpl) GetAll(c *gin.Context) {
 
 	// Responde con un mensaje
 	c.JSON(200, gin.H{
-		"message": "Welcome to the GetById!",
-		"boards":  boards,
+		"error":  nil,
+		"boards": boards,
 	})
 }
 
@@ -48,8 +48,7 @@ func (h *boardQueryHandlerImpl) GetById(c *gin.Context) {
 
 	// Responde con un mensaje
 	c.JSON(200, gin.H{
-		"message": "Welcome to the GetById!",
-		"boardId": id,
-		"board":   board,
+		"error": nil,
+		"board": board,
 	})
 }
