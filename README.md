@@ -2,6 +2,7 @@
 
 Este repositorio contiene un backend REST API desarrollado en **Go**, utilizando el framework **Gin** para manejar las solicitudes HTTP. El objetivo principal de este proyecto es implementar una arquitectura robusta y escalable aplicando principios sólidos de desarrollo.
 
+Para ir al repositorio del frontend haga click aqui. https://github.com/EdgarDev17/board-management-frontend
 ## Características
 
 - **Principios SOLID**: La aplicación sigue los principios de diseño SOLID, asegurando que el código sea modular, mantenible y fácil de extender.
