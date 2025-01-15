@@ -45,3 +45,81 @@ project-root/
 └── README.md
 
 ```
+
+# Documentación de Endpoints de la API
+
+## Tableros (Boards)
+
+### Obtener Todos los Tableros
+
+- **Método:** GET
+- **Endpoint:** `/api/v1/boards`
+- **Descripción:** Recupera una lista de todos los tableros.
+
+### Obtener Tablero por ID
+
+- **Método:** GET
+- **Endpoint:** `/api/v1/boards/:id`
+- **Descripción:** Recupera un tablero específico por su ID.
+
+### Crear Tablero
+
+- **Método:** POST
+- **Endpoint:** `/api/v1/boards`
+- **Descripción:** Crea un nuevo tablero.
+
+### Actualizar Tablero
+
+- **Método:** PUT
+- **Endpoint:** `/api/v1/boards`
+- **Descripción:** Actualiza un tablero existente.
+
+### Eliminar Tablero
+
+- **Método:** DELETE
+- **Endpoint:** `/api/v1/boards/:id`
+- **Descripción:** Elimina un tablero específico por su ID.
+
+### Obtener Tareas por ID de Tablero
+
+- **Método:** GET
+- **Endpoint:** `/api/v1/boards/tasks/:id`
+- **Descripción:** Recupera todas las tareas asociadas a un tablero específico.
+
+## Tareas (Tasks)
+
+### Obtener Todas las Tareas
+
+- **Método:** GET
+- **Endpoint:** `/api/v1/tasks`
+- **Descripción:** Recupera una lista de todas las tareas.
+
+### Obtener Tarea por ID
+
+- **Método:** GET
+- **Endpoint:** `/api/v1/tasks/:id`
+- **Descripción:** Recupera una tarea específica por su ID.
+
+### Crear Tarea
+
+- **Método:** POST
+- **Endpoint:** `/api/v1/tasks`
+- **Descripción:** Crea una nueva tarea.
+
+### Actualizar Tarea
+
+- **Método:** PUT
+- **Endpoint:** `/api/v1/tasks`
+- **Descripción:** Actualiza una tarea existente.
+
+### Eliminar Tarea
+
+- **Método:** DELETE
+- **Endpoint:** `/api/v1/tasks/:id`
+- **Descripción:** Elimina una tarea específica por su ID.
+
+### Actualizar Estado de Tarea
+
+- **Método:** PATCH
+- **Endpoint:** `/api/v1/tasks/state`
+- **Descripción:** Actualiza el estado de una tarea existente.
