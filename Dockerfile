@@ -1,38 +1,20 @@
-# backend/Dockerfile
-FROM golang:1.21-alpine
+# Usa una imagen oficial de Go como base
+FROM golang:latest AS builder
 
+# Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copiar go.mod y go.sum
+# Copia el archivo go.mod y go.sum para aprovechar el cache de dependencias
 COPY go.mod go.sum ./
-RUN go mod download
 
+# Descarga las dependencias del proyecto
+RUN go mod tidy
+
+# Copia todo el código fuente al contenedor
 COPY . .
 
-# Compilar la aplicación
-RUN go build -o main .
-
+# Exponer el puerto que usa tu app de Gin
 EXPOSE 8080
-CMD ["./main"]
 
-# docker-compose.yml
-version: '3.8'
-
-services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    environment:
-      - REACT_APP_API_URL=http://localhost:8080
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
+# Establece el comando por defecto para correr el servidor
+CMD ["go", "run", "/cmd/api/main.go"]

@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Servicio para la app de Go
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go-backend
+    ports:
+      - '8080:8080'
+    volumes:
+      - .:/app
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017
+      - POSTGRE_USER=developer
+      - POSTGRE_PASSWORD=rOPIngeActiCTORpRI
+      - POSTGRE_DB=boardmanagement
+      - POSTGRE_SSL=disable
+      - POSTGRE_HOST=postgres
+      - POSTGRE_PORT=5432
+    depends_on:
+      - postgres
+      - mongo
+    command: ['go', 'run', '/cmd/api/main.go']
+
+  # Servicio para PostgreSQL
+  postgres:
+    image: postgres:latest
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: developer
+      POSTGRES_PASSWORD: rOPIngeActiCTORpRI
+      POSTGRES_DB: boardmanagement
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  # Servicio para MongoDB
+  mongo:
+    image: mongo:latest
+    container_name: mongo-db
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - '27017:27017'
+
+# Volúmenes persistentes
+volumes:
+  postgres_data:
+  mongo_data:
