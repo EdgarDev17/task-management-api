@@ -10,4 +10,5 @@ type TaskQueryRepositoryI interface {
 	GetById(ctx context.Context, id string) (*models.TaskQuery, error)
 	Upsert(ctx context.Context, board *models.Task) error
 	Delete(ctx context.Context, board *models.Task) error
+	GetTasksByBoardId(ctx context.Context, boardId string) ([]*models.TaskQuery, error)
 }

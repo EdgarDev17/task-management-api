@@ -29,7 +29,7 @@ func NewPostgreSQLBoardCommandRepository(db *sql.DB, eventStore repositories.Eve
 	}
 }
 
-func (r *PostgreSQLBoardCommandRepository) Create(ctx context.Context, board *models.Board) error {
+func (r *PostgreSQLBoardCommandRepository) Create(ctx context.Context, board *models.Board) (*models.Board, error) {
 	query := `
 	INSERT INTO tableros (nombre, descripcion)
 	VALUES ($1, $2)
@@ -39,7 +39,7 @@ func (r *PostgreSQLBoardCommandRepository) Create(ctx context.Context, board *mo
 	tx, err := r.db.BeginTx(ctx, nil)
 
 	if err != nil {
-		return fmt.Errorf("error creating transaction: %v", err)
+		return nil, fmt.Errorf("error creating transaction: %v", err)
 	}
 
 	var boardID uuid.UUID
@@ -53,7 +53,7 @@ func (r *PostgreSQLBoardCommandRepository) Create(ctx context.Context, board *mo
 
 	if err != nil {
 		tx.Rollback()
-		return err
+		return nil, err
 	}
 
 	// Asigno el ID obtenido al board
@@ -77,10 +77,14 @@ func (r *PostgreSQLBoardCommandRepository) Create(ctx context.Context, board *mo
 	if err != nil {
 		tx.Rollback()
 		r.logger.Error("Error al guardar evento", zap.Error(err))
-		return err
+		return nil, err
 	}
 
-	return tx.Commit()
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return board, nil
 }
 
 func (r *PostgreSQLBoardCommandRepository) Update(ctx context.Context, board *models.Board) error {

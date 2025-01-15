@@ -10,6 +10,7 @@ import (
 type TaskQueryHandlerI interface {
 	GetById(c *gin.Context)
 	GetAll(c *gin.Context)
+	GetTasksByBoardId(c *gin.Context)
 }
 
 // las implementaciones deben ser privadas hacia otros paquetes
@@ -49,5 +50,24 @@ func (h *taskQueryHandlerImpl) GetById(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"error": nil,
 		"Task":  task,
+	})
+}
+
+func (h *taskQueryHandlerImpl) GetTasksByBoardId(c *gin.Context) {
+	boardId := c.Param("id")
+
+	tasks, err := h.service.GetTasksByBoardId(c, boardId)
+
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": err.Error(),
+			"tasks": nil,
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"error": nil,
+		"tasks": tasks,
 	})
 }

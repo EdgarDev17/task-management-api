@@ -106,3 +106,30 @@ func (db *mongoTaskQueryRepository) Delete(ctx context.Context, task *models.Tas
 
 	return nil
 }
+
+func (db *mongoTaskQueryRepository) GetTasksByBoardId(ctx context.Context, boardId string) ([]*models.TaskQuery, error) {
+	var tasks []*models.TaskQuery
+
+	opts := options.Find().SetSort(bson.D{{Key: "fecha_creacion", Value: -1}})
+	filter := bson.M{"id_tablero": boardId}
+
+	cursor, err := db.collection.Find(ctx, filter, opts)
+
+	if err != nil {
+		db.logger.Error("error al buscar las tareas por id de tablero", zap.Error(err))
+		return nil, err
+	}
+
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var task models.TaskQuery
+		if err := cursor.Decode(&task); err != nil {
+			db.logger.Error("error al decodificar la tarea", zap.Error(err))
+			return nil, err
+		}
+		tasks = append(tasks, &task)
+	}
+
+	return tasks, nil
+}

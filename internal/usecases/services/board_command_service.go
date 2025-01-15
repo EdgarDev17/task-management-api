@@ -11,7 +11,7 @@ import (
 
 // interfaz para el servicio
 type BoardCommandServiceI interface {
-	Create(ctx context.Context, board *models.Board) error
+	Create(ctx context.Context, board *models.Board) (*models.Board, error)
 	Update(ctx context.Context, board *models.Board) error
 	Delete(ctx context.Context, id string) error
 }
@@ -28,15 +28,15 @@ func NewBoardCommandService(repo repositories.BoardCommandRepositoryI, logger re
 	}
 }
 
-func (s *boardCommandServiceImpl) Create(ctx context.Context, board *models.Board) error {
-	err := s.repo.Create(ctx, board)
+func (s *boardCommandServiceImpl) Create(ctx context.Context, board *models.Board) (*models.Board, error) {
+	newBoard, err := s.repo.Create(ctx, board)
 
 	if err != nil {
 		s.logger.Error("Error en el service command Create()", zap.Error(err))
-		return err
+		return nil, err
 	}
 
-	return nil
+	return newBoard, nil
 }
 
 func (s *boardCommandServiceImpl) Update(ctx context.Context, board *models.Board) error {

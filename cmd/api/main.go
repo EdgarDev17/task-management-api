@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gin-contrib/cors"
 	_ "github.com/lib/pq"
 
 	"context"
@@ -91,8 +92,17 @@ func main() {
 
 	taskQueryService := services.NewTaskQueryServiceImpl(taskQueryRepo, zapLogger)
 	taskQueryHandler := handlers.NewTaskQueryHandler(taskQueryService)
-	// Set up router
+
 	router := gin.Default()
+
+	// CONFIGURANDO CORS
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"}, // el frontend
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	// Rutas para boards
 	router.GET("/api/v1/boards", boardQueryHandler.GetAll)
@@ -100,6 +110,7 @@ func main() {
 	router.POST("/api/v1/boards", boardCommandHandler.Create)
 	router.PUT("/api/v1/boards", boardCommandHandler.Update)
 	router.DELETE("/api/v1/boards/:id", boardCommandHandler.Delete)
+	router.GET("/api/v1/boards/tasks/:id", taskQueryHandler.GetTasksByBoardId)
 
 	// Rutas para task
 	router.GET("/api/v1/tasks", taskQueryHandler.GetAll)

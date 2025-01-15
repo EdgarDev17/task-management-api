@@ -9,6 +9,7 @@ import (
 type TaskQueryServiceI interface {
 	GetAll(ctx context.Context) ([]*models.TaskQuery, error)
 	GetById(ctx context.Context, id string) (*models.TaskQuery, error)
+	GetTasksByBoardId(ctx context.Context, boardId string) ([]*models.TaskQuery, error)
 }
 
 // Implementacion concreta del servicio
@@ -38,6 +39,17 @@ func (service *taskQueryServiceImpl) GetAll(ctx context.Context) ([]*models.Task
 	data, err := service.repo.GetAll(ctx)
 
 	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func (service *taskQueryServiceImpl) GetTasksByBoardId(ctx context.Context, boardId string) ([]*models.TaskQuery, error) {
+	data, err := service.repo.GetTasksByBoardId(ctx, boardId)
+
+	if err != nil {
+		service.logger.Error("Error al obtener las tareas")
 		return nil, err
 	}
 
